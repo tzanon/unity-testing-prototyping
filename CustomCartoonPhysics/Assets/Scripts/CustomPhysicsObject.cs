@@ -12,27 +12,36 @@ public class CustomPhysicsObject : MonoBehaviour
 	// Start is called before the first frame update
 	private void Start()
 	{
-
 	}
 
-	// Update is called once per frame
+	// apply all current active forces
 	private void FixedUpdate()
 	{
-
+		
 	}
 
-	/*
-		* Applies the effects of all current forces
-		*/
+	
+	// Applies the effects of all current forces
 	private void ApplyForces()
 	{
-
+		
 	}
 
-	//
+	// activates the timer
+	private void ActivateCustomForce(CustomForce force)
+	{
+		
+	}
+
+	private bool RemoveCustomForce(CustomForce force)
+	{
+		// TODO: 
+		return true;
+	}
+
 	public void AddCustomForce()
 	{
-
+		
 	}
 
 
