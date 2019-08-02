@@ -56,12 +56,12 @@ public class MagnitudeDropoffModel
 			}
 		}
 	}
-	
+
 	public MagnitudeDropoffModel(float init, float lifetime)
 	{
 		_start = new Vector2(0.0f, init);
 		_end = new Vector2(lifetime, 0.0f);
-
+		
 		_intermediatePoints = new List<Vector2>();
 		_modelLines = new Dictionary<ModelTimeDomain, ModelLine>();
 		
@@ -71,13 +71,24 @@ public class MagnitudeDropoffModel
 	
 	public void AddPoint(Vector2 point)
 	{
+		// TODO:
+		// 1) add point to list of intermediates
+		// 2) sort list by time value (point.x)
+		// 3) recalculate model between the endpoints of new point's domain
+		// --that is, between the two points it was added between; will replace former
+		// single line with two lines
 		
+		// not this...use partial recalculation
 		CalculateModel();
 	}
 	
 	public void RemovePoint(Vector2 point)
 	{
 		
+		// TODO:
+		// 
+		
+		// not this...use partial recalculation
 		CalculateModel();
 	}
 	
@@ -107,6 +118,16 @@ public class MagnitudeDropoffModel
 			AddLineToModel(_totalPoints[i], _totalPoints[i+1]);
 		}
 	}
+	
+	/// <summary>
+	/// partially recalculate model by recalculating lines between the points
+	/// with the given indices
+	/// </summary>
+	private void RecaculculateBetweenPoints(int p1_idx, int p2_idx)
+	{
+		
+	}
+	
 	
 	private void AddLineToModel(Vector2 p1, Vector2 p2)
 	{
@@ -144,5 +165,14 @@ public class MagnitudeDropoffModel
 		}
 	}
 	
+	/// <summary>
+	/// return string representation of the model:
+	/// list of domains and their corresponding lines
+	/// </summary>
+	public override string ToString()
+	{
+		
+		return "";
+	}
 	
 }

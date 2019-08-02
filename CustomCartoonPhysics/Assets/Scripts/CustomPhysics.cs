@@ -44,17 +44,15 @@ namespace CustomPhysics
 	/// </summary>
 	public struct ModelTimeDomain
 	{
-		float start;
-		float end;
+		private float start;
+		private float end;
 		
 		public ModelTimeDomain(float t1, float t2)
 		{
 			if (t1 < 0 || t2 < 0)
 				Debug.LogError("Model range times cannot be negative");
-			if (t2 < t1)
+			if (t2 <= t1)
 				Debug.LogError("Model's end time must be greater than its start time");
-			if (t1 > t2)
-				Debug.LogError("Model's start time must be less than its end time");
 			
 			start = t1;
 			end = t2;
