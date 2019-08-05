@@ -77,6 +77,17 @@ public class MagnitudeDropoffModel
 		// 3) recalculate model between the endpoints of new point's domain
 		// --that is, between the two points it was added between; will replace former
 		// single line with two lines
+
+		//_intermediatePoints.Sort();
+
+		Vector2 v2 = new Vector2(1,2);
+		ModelPoint mp = new ModelPoint(3, 4);
+
+		if (v2 == mp)
+		{
+
+		}
+		
 		
 		// not this...use partial recalculation
 		CalculateModel();
