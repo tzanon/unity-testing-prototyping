@@ -10,30 +10,30 @@ namespace CustomPhysics
 	/// </summary>
 	public struct ModelPoint : IComparer<ModelPoint>
 	{
-		private float time;
-		private float strength;
+		private float _time;
+		private float _strength;
 
 		public float Time
 		{
-			get { return time; }
+			get { return _time; }
 			set
 			{
 				if (value < 0.0f)
 				{
 					Debug.LogError("Model point cannot have a negative time value!");
-					time = 0.0f;
+					_time = 0.0f;
 				}
 				else
 				{
-					time = value;
+					_time = value;
 				}
 			}
 		}
 
 		public float Strength
 		{
-			get { return strength; }
-			set { strength = value; }
+			get { return _strength; }
+			set { _strength = value; }
 		}
 
 		public ModelPoint(float t, float s)
@@ -41,14 +41,14 @@ namespace CustomPhysics
 			if (t < 0.0f)
 			{
 				Debug.LogError("Model point cannot have a negative time value!");
-				time = 0.0f;
+				_time = 0.0f;
 			}
 			else
 			{
-				time = t;
+				_time = t;
 			}
-
-			strength = s;
+			
+			_strength = s;
 		}
 
 		/// <summary>
@@ -57,34 +57,34 @@ namespace CustomPhysics
 		/// </summary>
 		public Vector2 AsVector2()
 		{
-			return new Vector2(time, strength);
+			return new Vector2(_time, _strength);
 		}
 
 		public static bool operator ==(ModelPoint a, ModelPoint b)
 		{
-			return (a.time == b.time && a.strength == b.strength);
+			return (a._time == b._time && a._strength == b._strength);
 		}
 		public static bool operator !=(ModelPoint a, ModelPoint b)
 		{
-			return (a.time != b.time || a.strength != b.strength);
+			return (a._time != b._time || a._strength != b._strength);
 		}
 
 		// compare with Vector2s as well
 		public static bool operator ==(ModelPoint mp, Vector2 v2)
 		{
-			return (mp.time == v2.x && mp.strength == v2.y);
+			return (mp._time == v2.x && mp._strength == v2.y);
 		}
 		public static bool operator !=(ModelPoint mp, Vector2 v2)
 		{
-			return (mp.time != v2.x || mp.strength != v2.y);
+			return (mp._time != v2.x || mp._strength != v2.y);
 		}
 		public static bool operator ==(Vector2 v2, ModelPoint mp)
 		{
-			return (mp.time == v2.x && mp.strength == v2.y);
+			return (mp._time == v2.x && mp._strength == v2.y);
 		}
 		public static bool operator !=(Vector2 v2, ModelPoint mp)
 		{
-			return (mp.time != v2.x || mp.strength != v2.y);
+			return (mp._time != v2.x || mp._strength != v2.y);
 		}
 
 		/// <summary>
@@ -93,9 +93,9 @@ namespace CustomPhysics
 		/// </summary>
 		public int Compare(ModelPoint a, ModelPoint b)
 		{
-			if (a.time > b.time)
+			if (a._time > b._time)
 				return 1;
-			if (a.time < b.time)
+			if (a._time < b._time)
 				return -1;
 			else
 				return 0;
@@ -117,16 +117,15 @@ namespace CustomPhysics
 			get { return _yIntercept; }
 		}
 		
-		public ModelLine(Vector2 p1, Vector2 p2)
+		public ModelLine(ModelPoint p1, ModelPoint p2)
 		{
 			RecalculateLine(p1, p2);
 		}
 		
-		
-		public void RecalculateLine(Vector2 p1, Vector2 p2)
+		public void RecalculateLine(ModelPoint p1, ModelPoint p2)
 		{
-			_slope = (p2.y - p1.y) / (p2.x - p1.x);
-			_yIntercept = p2.y - _slope * p2.x;
+			_slope = (p2.Strength - p1.Strength) / (p2.Time - p1.Time);
+			_yIntercept = p2.Strength - _slope * p2.Time;
 		}
 		
 		public float GetLinePoint(float x)
@@ -140,8 +139,8 @@ namespace CustomPhysics
 	/// </summary>
 	public struct ModelTimeDomain
 	{
-		private readonly float min;
-		private readonly float max;
+		public readonly float min;
+		public readonly float max;
 		
 		public ModelTimeDomain(float t1, float t2)
 		{

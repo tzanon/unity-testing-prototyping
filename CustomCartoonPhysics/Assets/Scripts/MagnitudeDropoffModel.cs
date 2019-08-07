@@ -79,28 +79,57 @@ public class MagnitudeDropoffModel
 		// single line with two lines
 
 		//_intermediatePoints.Sort();
-
-		Vector2 v2 = new Vector2(1,2);
-		ModelPoint mp = new ModelPoint(3, 4);
-
-		if (v2 == mp)
-		{
-
-		}
 		
 		
-		// not this...use partial recalculation
+		
+		// not this...use partial recalculation after full calculate has been tested
 		CalculateModel();
 	}
 	
 	public void RemovePoint(Vector2 point)
 	{
-		
 		// TODO:
-		// 
+		// 1) determine which domain(s) point is part of
+		// 2) remove those domains and their corresponding lines from the model
+		// 3) make points for new line using 
+		// 3) make new range based off domain1.max and domain2.min
 		
 		// not this...use partial recalculation
 		CalculateModel();
+	}
+	
+	/// <summary>
+	/// return the domain for which <c>p</p> is the min
+	/// </summary>
+	public ModelTimeDomain GetDomainWithMin(ModelPoint p)
+	{
+		foreach (ModelTimeDomain domain in _modelLines.Keys)
+		{
+			if (domain.min == p.Time)
+			{
+				return domain;
+			}
+		}
+		
+		Debug.LogWarning("There is no domain with MIN ", p.Time);
+		return null;
+	}
+	
+	/// <summary>
+	/// return the domain for which <c>p</p> is the max
+	/// </summary>
+	public ModelTimeDomain GetDomainWithMax(ModelPoint p)
+	{
+		foreach (ModelTimeDomain domain in _modelLines.Keys)
+		{
+			if (domain.max == p.Time)
+			{
+				return domain;
+			}
+		}
+		
+		Debug.LogWarning("There is no domain with MAX ", p.Time);
+		return null;
 	}
 	
 	/// <summary>
@@ -139,8 +168,7 @@ public class MagnitudeDropoffModel
 		
 	}
 	
-	
-	private void AddLineToModel(Vector2 p1, Vector2 p2)
+	private void AddLineToModel(ModelPoint p1, ModelPoint p2)
 	{
 		ModelLine line = new ModelLine(p1, p2);
 		ModelTimeDomain domain = new ModelTimeDomain(p1.x, p2.x);
