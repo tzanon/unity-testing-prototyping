@@ -95,7 +95,7 @@ public class MagnitudeDropoffModel
 			Debug.LogError("Cannot add out of bounds point " + point.ToString());
 			return;
 		}
-
+		
 		// from the current model, remove the line with domain that contains point
 		ModelTimeDomain currentDomain = GetDomainOfPoint(point);
 		if (currentDomain != ModelTimeDomain.Default)

@@ -9,170 +9,95 @@ namespace Tests
 {
 	public class ModelPointTests
 	{
+		ModelPoint mp1 = new ModelPoint(0.0f, 10.0f);
+		ModelPoint mp2 = new ModelPoint(0.0f, 10.0f);
+		ModelPoint mp3 = new ModelPoint(3.0f, 10.0f);
+		ModelPoint mp4 = new ModelPoint(6.0f, 2.0f);
+		ModelPoint mp5 = new ModelPoint(6.0f, 7.5f);
+		ModelPoint mp6 = new ModelPoint(8.0f, 0.0f);
+		
+		Vector2 vec1 = new Vector2(0.0f, 10.0f);
+		Vector2 vec2 = new Vector2(5.0f, 17.0f);
+		ModelPointComparer comparer = new ModelPointComparer();
+		ModelTimeDomain domain = new ModelTimeDomain(0.0f, 6.0f);
+		
 		[Test]
 		public void MPEqTest()
 		{
-			// Arrange
-			ModelPoint mp1 = new ModelPoint(0.0f, 10.0f);
-			ModelPoint mp2 = new ModelPoint(0.0f, 10.0f);
-
-			// Assert
 			Assert.IsTrue(mp1 == mp2);
 		}
 
 		[Test]
 		public void MPNotEqTest()
 		{
-			// Arrange
-			ModelPoint mp1 = new ModelPoint(0.0f, 10.0f);
-			ModelPoint mp2 = new ModelPoint(30.0f, 10.0f);
-
-			// Assert
-			Assert.IsTrue(mp1 != mp2);
+			Assert.IsTrue(mp1 != mp3);
 		}
 
 		[Test]
 		public void MPEqVector2Test()
 		{
-			// Arrange
-			ModelPoint mp = new ModelPoint(0.0f, 10.0f);
-			Vector2 v2 = new Vector2(0.0f, 10.0f);
-
-			// Assert
-			Assert.IsTrue(mp == v2);
+			Assert.IsTrue(mp1 == vec1);
 		}
 
 		[Test]
 		public void MPNotEqVector2Test()
 		{
-			// Arrange
-			ModelPoint mp = new ModelPoint(0.0f, 10.0f);
-			Vector2 v2 = new Vector2(5.0f, 17.0f);
-
-			// Assert
-			Assert.IsTrue(mp != v2);
+			Assert.IsTrue(mp1 != vec2);
 		}
 
 		[Test]
 		public void MPAsVectorTest()
 		{
-			// Arrange
-			ModelPoint mp = new ModelPoint(0.0f, 10.0f);
-			Vector2 expectedVector = new Vector2(0.0f, 10.0f);
-
-			// Act
-			Vector2 mpVector = mp.AsVector2();
-
-			// Assert
-			//Assert.That(mpVector, Is.EqualTo(expectedVector));
-			Assert.AreEqual(expectedVector, mpVector);
+			Vector2 mpVector = mp1.AsVector2();
+			Assert.AreEqual(vec1, mpVector);
 		}
 
 		[Test]
 		public void MPLessThanTest()
 		{
-			// Arrange
-			ModelPointComparer comparer = new ModelPointComparer();
-			ModelPoint mp = new ModelPoint(0.0f, 10.0f);
-			ModelPoint mp2 = new ModelPoint(3.0f, 6.0f);
-
-			// Act
-			int cmpRes = comparer.Compare(mp, mp2);
-
-			// Assert
-			//Assert.That(cmpRes, Is.LessThan(0));
+			int cmpRes = comparer.Compare(mp1, mp3);
 			Assert.Negative(cmpRes);
 		}
 
 		[Test]
 		public void MPGreaterThanTest()
 		{
-			// Arrange
-			ModelPointComparer comparer = new ModelPointComparer();
-			ModelPoint mp = new ModelPoint(6.0f, 5.0f);
-			ModelPoint mp2 = new ModelPoint(3.0f, 6.0f);
-
-			// Act
-			int cmpRes = comparer.Compare(mp, mp2);
-
-			// Assert
-			//Assert.That(cmpRes, Is.GreaterThan(0));
+			int cmpRes = comparer.Compare(mp4, mp3);
 			Assert.Positive(cmpRes);
 		}
 
 		[Test]
 		public void MPEqualCmpTest()
 		{
-			// Arrange
-			ModelPointComparer comparer = new ModelPointComparer();
-			ModelPoint mp = new ModelPoint(3.0f, 2.0f);
-			ModelPoint mp2 = new ModelPoint(3.0f, 6.0f);
-
-			// Act
-			int cmpRes = comparer.Compare(mp, mp2);
-
-			// Assert
-			//Assert.That(cmpRes, Is.EqualTo(0));
+			int cmpRes = comparer.Compare(mp4, mp5);
 			Assert.Zero(cmpRes);
 		}
 
 		[Test]
-		public void DomainContainsMin()
+		public void DomainContainsMinTest()
 		{
-			// Arrange
-			ModelTimeDomain domain = new ModelTimeDomain(0.0f, 6.0f);
-			ModelPoint mp = new ModelPoint(0.0f, 10.0f);
-
-			// Act
-			bool domainContains = domain.Contains(mp);
-
-			// Assert
-			//Assert.That(domainContains, Is.EqualTo(expDomainContains));
+			bool domainContains = domain.Contains(mp1);
 			Assert.IsTrue(domainContains);
 		}
 
 		[Test]
-		public void DomainContainsMax()
+		public void DomainContainsMaxTest()
 		{
-			// Arrange
-			ModelTimeDomain domain = new ModelTimeDomain(0.0f, 6.0f);
-			ModelPoint mp = new ModelPoint(6.0f, 10.0f);
-
-			// Act
-			bool domainContains = domain.Contains(mp);
-
-			// Assert
-			//Assert.That(domainContains, Is.EqualTo(expDomainNotContains));
+			bool domainContains = domain.Contains(mp5);
 			Assert.IsFalse(domainContains);
 		}
 
 		[Test]
-		public void DomainContains()
+		public void DomainContainTest()
 		{
-			// Arrange
-			ModelTimeDomain domain = new ModelTimeDomain(0.0f, 6.0f);
-			ModelPoint mp = new ModelPoint(3.0f, 10.0f);
-
-			// Act
-			bool domainContains = domain.Contains(mp);
-
-			// Assert
-			//Assert.That(domainContains, Is.EqualTo(expDomainContains));
+			bool domainContains = domain.Contains(mp3);
 			Assert.IsTrue(domainContains);
 		}
 
 		[Test]
-		public void DomainDoesNotContains()
+		public void DomainDoesNotContainTest()
 		{
-			// Arrange
-			ModelTimeDomain domain = new ModelTimeDomain(0.0f, 6.0f);
-			ModelPoint mp = new ModelPoint(8.0f, 10.0f);
-
-			// Act
-			bool domainContains = domain.Contains(mp);
-
-			// Assert
-			//Assert.That(domainContains, Is.EqualTo(expDomainNotContains));
+			bool domainContains = domain.Contains(mp6);
 			Assert.IsFalse(domainContains);
 		}
 	}
