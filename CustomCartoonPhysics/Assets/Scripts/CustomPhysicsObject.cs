@@ -1,4 +1,6 @@
-﻿using UnityEngine;
+﻿using CustomPhysics;
+
+using UnityEngine;
 using System.Collections.Generic;
 
 [RequireComponent(typeof(Rigidbody2D), typeof(Collider2D))]
@@ -8,6 +10,11 @@ public class CustomPhysicsObject : MonoBehaviour
 
 	private List<CustomForce> currentForces = new List<CustomForce>();
 	HashSet<CustomForce> forces = new HashSet<CustomForce>();
+
+	struct Mod
+	{
+		Dictionary<ModelTimeDomain, ModelLine> mls;
+	}
 
 	// Start is called before the first frame update
 	private void Start()

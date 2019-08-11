@@ -1,37 +1,41 @@
 ﻿using CustomPhysics;
-
 using System.Collections.Generic;
 using UnityEngine;
 
+/// <summary>
+/// 
+/// </summary>
 public class MagnitudeDropoffModel
 {
-	private Vector2 _start;
-	private Vector2 _end;
+	//private ModelPoint _start;
+	//private ModelPoint _end;
 
-	// these two lists MUST ALWAYS be sorted by x (time)!!
-	private List<Vector2> _intermediatePoints;
-	
-	private Vector2[] _totalPoints;
-	
+	// this list MUST ALWAYS be sorted by x (time)!!
+	private ModelPointList _pointList;
+
+	private readonly ModelPointComparer _modelPointComparer;
+
 	private Dictionary<ModelTimeDomain, ModelLine> _modelLines;
 
 	public float InitialMagnitude
 	{
 		get
 		{
-			return _start.y;
+			return _pointList.Start.Strength;
 		}
 		set
 		{
 			if (value >= 0)
 			{
-				_start = new Vector2(0f, value);
-				this.CalculateModel();
+				_pointList.SetStartValue(value);
+
+				// TODO: recalc line to inter[0]
+				//this.CalculateModel();
 			}
 			else
 			{
+				// do nothing, keep old value
 				Debug.LogError("Force cannot have a negative magnitude");
-				_start = new Vector2(0f, 0f);
 			}
 		}
 	}
@@ -40,138 +44,177 @@ public class MagnitudeDropoffModel
 	{
 		get
 		{
-			return _end.x;
+			return _pointList.End.Time;
 		}
 		set
 		{
 			if (value > 0)
 			{
-				_end = new Vector2(value, 0f);
-				this.CalculateModel();
+				_pointList.SetEndValue(value);
+
+				// TODO: recalc line from inter end
+				//this.CalculateModel();
 			}
 			else
 			{
+				// keep old value
 				Debug.LogError("Force cannot have a non-positive lifetime");
-				_end = new Vector2(0f, 0.1f);
 			}
 		}
 	}
 
 	public MagnitudeDropoffModel(float init, float lifetime)
 	{
-		_start = new Vector2(0.0f, init);
-		_end = new Vector2(lifetime, 0.0f);
-		
-		_intermediatePoints = new List<Vector2>();
+		_pointList = new ModelPointList(init, lifetime);
+
+		_modelPointComparer = new ModelPointComparer();
 		_modelLines = new Dictionary<ModelTimeDomain, ModelLine>();
 		
 		this.CalculateModel();
 	}
-	
-	
-	public void AddPoint(Vector2 point)
-	{
-		// TODO:
-		// 1) add point to list of intermediates
-		// 2) sort list by time value (point.x)
-		// 3) recalculate model between the endpoints of new point's domain
-		// --that is, between the two points it was added between; will replace former
-		// single line with two lines
 
-		//_intermediatePoints.Sort();
-		
-		
-		
-		// not this...use partial recalculation after full calculate has been tested
-		CalculateModel();
-	}
-	
-	public void RemovePoint(Vector2 point)
+	public MagnitudeDropoffModel(float init, float lifetime, ModelPoint[] points) : this(init, lifetime)
 	{
-		// TODO:
-		// 1) determine which domain(s) point is part of
-		// 2) remove those domains and their corresponding lines from the model
-		// 3) make points for new line using 
-		// 3) make new range based off domain1.max and domain2.min
-		
-		// not this...use partial recalculation
-		CalculateModel();
+		_pointList = new ModelPointList(init, lifetime);
+
+		_modelPointComparer = new ModelPointComparer();
+		_modelLines = new Dictionary<ModelTimeDomain, ModelLine>();
+
+		this.CalculateModel();
 	}
-	
-	/// <summary>
-	/// return the domain for which <c>p</p> is the min
-	/// </summary>
-	public ModelTimeDomain GetDomainWithMin(ModelPoint p)
-	{
-		foreach (ModelTimeDomain domain in _modelLines.Keys)
-		{
-			if (domain.min == p.Time)
-			{
-				return domain;
-			}
-		}
-		
-		Debug.LogWarning("There is no domain with MIN ", p.Time);
-		return null;
-	}
-	
-	/// <summary>
-	/// return the domain for which <c>p</p> is the max
-	/// </summary>
-	public ModelTimeDomain GetDomainWithMax(ModelPoint p)
-	{
-		foreach (ModelTimeDomain domain in _modelLines.Keys)
-		{
-			if (domain.max == p.Time)
-			{
-				return domain;
-			}
-		}
-		
-		Debug.LogWarning("There is no domain with MAX ", p.Time);
-		return null;
-	}
-	
+
 	/// <summary>
 	/// based on model's points (start, end, and any intermediate ones),
 	/// construct the lines that comprise it
 	/// </summary>
-	private void CalculateModel()
+	public void AddPoint(ModelPoint point)
 	{
-		_modelLines.Clear(); // this is inefficient, change later?
-		
-		// calculate array of all points
-		int numInterPoints = _intermediatePoints.Count;
-		
-		_totalPoints = new Vector2[numInterPoints+2];
-		_totalPoints[0] = _start;
-		_totalPoints[_totalPoints.Length-1] = _end;
-		
-		for (int i = 0; i < numInterPoints; i++)
+		// if point happens "before" start, don't add it
+		if (!_pointList.PointInBounds(point))
 		{
-			_totalPoints[i+1] = _intermediatePoints[i];
+			Debug.LogError("Cannot add out of bounds point " + point.ToString());
+			return;
+		}
+
+		// from the current model, remove the line with domain that contains point
+		ModelTimeDomain currentDomain = GetDomainOfPoint(point);
+		if (currentDomain != ModelTimeDomain.Default)
+			_modelLines.Remove(currentDomain);
+
+		// add to point list
+		_pointList.Add(point);
+
+		// create the two new lines and domains the new point ends and starts with
+		int idx = _pointList.IndexOf(point);
+		ModelPoint prevPoint = _pointList[idx - 1];
+		ModelPoint nextPoint = _pointList[idx + 1];
+		AddLineToModel(prevPoint, point);
+		AddLineToModel(point, nextPoint);
+	}
+
+	/// <summary>
+	/// based on model's points (start, end, and any intermediate ones),
+	/// construct the lines that comprise it
+	/// </summary>
+	public void RemovePoint(ModelPoint point)
+	{
+		// can't remove start or end
+		if (point == _pointList.Start || point == _pointList.End)
+		{
+			return;
+		}
+
+		// from the current model, remove the lines the point is part of
+		ModelTimeDomain prevDomain = GetDomainWithMax(point);
+		ModelTimeDomain nextDomain = GetDomainWithMin(point);
+		if (prevDomain != ModelTimeDomain.Default)
+			_modelLines.Remove(prevDomain);
+		if (prevDomain != ModelTimeDomain.Default)
+			_modelLines.Remove(nextDomain);
+
+		// add line connecting the endpoints of the point's lines
+		int idx = _pointList.IndexOf(point);
+		ModelPoint prevPoint = _pointList[idx - 1];
+		ModelPoint nextPoint = _pointList[idx + 1];
+		AddLineToModel(prevPoint, nextPoint);
+
+		// remove the point and recalculate lists
+		if (!_pointList.Remove(point))
+		{
+			Debug.LogError("Could not remove point " + point.ToString());
+		}
+	}
+
+	/// <summary>
+	/// return the domain that contains point
+	/// </summary>
+	public ModelTimeDomain GetDomainOfPoint(ModelPoint point)
+	{
+		foreach (ModelTimeDomain domain in _modelLines.Keys)
+		{
+			if (domain.Contains(point.Time))
+			{
+				return domain;
+			}
+		}
+
+		return ModelTimeDomain.Default;
+	}
+
+	/// <summary>
+	/// return the domain for which point is the min
+	/// </summary>
+	public ModelTimeDomain GetDomainWithMin(ModelPoint point)
+	{
+		foreach (ModelTimeDomain domain in _modelLines.Keys)
+		{
+			if (domain.min == point.Time)
+			{
+				return domain;
+			}
 		}
 		
-		// calculate model's lines and their corresponding time domains
-		for (int i = 0; i < _totalPoints.Length - 1; i++)
-		{
-			AddLineToModel(_totalPoints[i], _totalPoints[i+1]);
-		}
+		return ModelTimeDomain.Default;
 	}
 	
 	/// <summary>
-	/// partially recalculate model by recalculating lines between the points
-	/// with the given indices
+	/// return the domain for which point is the max
 	/// </summary>
-	private void RecaculculateBetweenPoints(int p1_idx, int p2_idx)
+	public ModelTimeDomain GetDomainWithMax(ModelPoint point)
 	{
+		foreach (ModelTimeDomain domain in _modelLines.Keys)
+		{
+			if (domain.max == point.Time)
+			{
+				return domain;
+			}
+		}
 		
+		return ModelTimeDomain.Default;
 	}
-	
+
+	/// <summary>
+	/// based on the model's points, construct the lines that comprise it
+	/// </summary>
+	private void CalculateModel()
+	{
+		_modelLines.Clear(); // this is inefficient, change later?
+		ModelPoint[] totalPoints = _pointList.ToArray();
+		
+		// calculate model's lines and their corresponding time domains
+		for (int i = 0; i < totalPoints.Length - 1; i++)
+		{
+			AddLineToModel(totalPoints[i], totalPoints[i+1]);
+		}
+	}
+
+	/// <summary>
+	/// Constructs a domain and line based on p1 and p2 and adds them to the model
+	/// </summary>
 	private void AddLineToModel(ModelPoint p1, ModelPoint p2)
 	{
 		ModelLine line = new ModelLine(p1, p2);
-		ModelTimeDomain domain = new ModelTimeDomain(p1.x, p2.x);
+		ModelTimeDomain domain = new ModelTimeDomain(p1.Time, p2.Time);
 		
 		_modelLines.Add(domain, line);
 	}
@@ -204,13 +247,19 @@ public class MagnitudeDropoffModel
 		}
 	}
 	
+
+	public void WriteToFile()
+	{
+		// TODO: export the model as a JSON or some other appropriate file type
+	}
+
 	/// <summary>
 	/// return string representation of the model:
 	/// list of domains and their corresponding lines
 	/// </summary>
 	public override string ToString()
 	{
-		
+		// TODO
 		return "";
 	}
 	
