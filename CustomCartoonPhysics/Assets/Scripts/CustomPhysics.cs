@@ -217,7 +217,7 @@ namespace CustomPhysics
 
 				if (current == null)
 				{
-					throw new IndexOutOfRangeException("Index out of range on point list " + ToString());
+					throw new IndexOutOfRangeException("Index " + index + " out of range on point list with " + this.Count + " points");
 				}
 				else
 				{
@@ -265,7 +265,7 @@ namespace CustomPhysics
 		/// <summary>
 		/// Constructor that makes the start and end points based on the given initial magnitude and lifetime
 		/// </summary>
-		public ModelPointList(float initialStrength, float lifetime)
+		public ModelPointList(float initialStrength, float lifetime, ModelPoint[] initIntermediatePoints = null)
 		{
 			_start = new ModelPointNode(0.0f, initialStrength);
 			_end = new ModelPointNode(lifetime, 0.0f);
@@ -273,6 +273,15 @@ namespace CustomPhysics
 
 			_start.next = _end;
 			_end.previous = _start;
+
+			if (initIntermediatePoints != null)
+			{
+				foreach (ModelPoint mp in initIntermediatePoints)
+				{
+					this.Add(mp);
+				}
+			}
+
 		}
 
 		/// <summary>
@@ -311,6 +320,7 @@ namespace CustomPhysics
 
 		/// <summary>
 		/// Adds point to list, keeping order with the other nodes
+		/// Returns true if addition successful, false otherwise
 		/// </summary>
 		public bool Add(ModelPoint point)
 		{
@@ -474,9 +484,12 @@ namespace CustomPhysics
 				return false;
 		}
 
+		/// <summary>
+		/// Returns string of model points in the list
+		/// </summary>
 		public override string ToString()
 		{
-			string descr = "ModelPointList containing ";
+			string descr = "ModelPointList with " + this.Count + " points: ";
 
 			ModelPointNode currentNode = _start;
 			while (currentNode != null)
@@ -494,7 +507,7 @@ namespace CustomPhysics
 	/// <summary>
 	/// A line component of the model
 	/// </summary>
-	public class ModelLine
+	public struct ModelLine
 	{
 		private float _slope;
 		private float _yIntercept;
@@ -511,13 +524,22 @@ namespace CustomPhysics
 		
 		public ModelLine(ModelPoint p1, ModelPoint p2)
 		{
+			_slope = 0.0f;
+			_yIntercept = 0.0f;
 			RecalculateLine(p1, p2);
 		}
 		
-		public void RecalculateLine(ModelPoint p1, ModelPoint p2)
+		public bool RecalculateLine(ModelPoint p1, ModelPoint p2)
 		{
+			if (p1.Time == p2.Time)
+			{
+				Debug.LogError("Model line cannot have an infinite slope");
+				return false;
+			}
+
 			_slope = (p2.Strength - p1.Strength) / (p2.Time - p1.Time);
 			_yIntercept = p2.Strength - _slope * p2.Time;
+			return true;
 		}
 		
 		public float GetLinePoint(float x)
@@ -606,5 +628,13 @@ namespace CustomPhysics
 			return mp.Time >= min && mp.Time < max;
 		}
 	}
-	
+
+	/// <summary>
+	/// Model used by custom force; relates time domains to a linear function
+	/// </summary>
+	public struct MagnitudeDropoffModel
+	{
+
+	}
+
 }

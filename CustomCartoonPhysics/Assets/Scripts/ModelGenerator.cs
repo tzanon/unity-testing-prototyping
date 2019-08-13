@@ -5,15 +5,10 @@ using UnityEngine;
 /// <summary>
 /// 
 /// </summary>
-public class MagnitudeDropoffModel
+public class ModelGenerator
 {
-	//private ModelPoint _start;
-	//private ModelPoint _end;
-
 	// this list MUST ALWAYS be sorted by x (time)!!
 	private ModelPointList _pointList;
-
-	private readonly ModelPointComparer _modelPointComparer;
 
 	private Dictionary<ModelTimeDomain, ModelLine> _modelLines;
 
@@ -30,7 +25,7 @@ public class MagnitudeDropoffModel
 				_pointList.SetStartValue(value);
 
 				// TODO: recalc line to inter[0]
-				//this.CalculateModel();
+				
 			}
 			else
 			{
@@ -53,7 +48,7 @@ public class MagnitudeDropoffModel
 				_pointList.SetEndValue(value);
 
 				// TODO: recalc line from inter end
-				//this.CalculateModel();
+				
 			}
 			else
 			{
@@ -63,29 +58,16 @@ public class MagnitudeDropoffModel
 		}
 	}
 
-	public MagnitudeDropoffModel(float init, float lifetime)
+	public ModelGenerator(float init, float lifetime, ModelPoint[] points = null)
 	{
-		_pointList = new ModelPointList(init, lifetime);
-
-		_modelPointComparer = new ModelPointComparer();
-		_modelLines = new Dictionary<ModelTimeDomain, ModelLine>();
-		
-		this.CalculateModel();
-	}
-
-	public MagnitudeDropoffModel(float init, float lifetime, ModelPoint[] points) : this(init, lifetime)
-	{
-		_pointList = new ModelPointList(init, lifetime);
-
-		_modelPointComparer = new ModelPointComparer();
+		_pointList = new ModelPointList(init, lifetime, points);
 		_modelLines = new Dictionary<ModelTimeDomain, ModelLine>();
 
 		this.CalculateModel();
 	}
 
 	/// <summary>
-	/// based on model's points (start, end, and any intermediate ones),
-	/// construct the lines that comprise it
+	/// 
 	/// </summary>
 	public void AddPoint(ModelPoint point)
 	{
@@ -113,8 +95,7 @@ public class MagnitudeDropoffModel
 	}
 
 	/// <summary>
-	/// based on model's points (start, end, and any intermediate ones),
-	/// construct the lines that comprise it
+	/// 
 	/// </summary>
 	public void RemovePoint(ModelPoint point)
 	{
@@ -157,7 +138,6 @@ public class MagnitudeDropoffModel
 				return domain;
 			}
 		}
-
 		return ModelTimeDomain.Default;
 	}
 
@@ -173,7 +153,6 @@ public class MagnitudeDropoffModel
 				return domain;
 			}
 		}
-		
 		return ModelTimeDomain.Default;
 	}
 	
@@ -189,7 +168,6 @@ public class MagnitudeDropoffModel
 				return domain;
 			}
 		}
-		
 		return ModelTimeDomain.Default;
 	}
 
@@ -247,7 +225,6 @@ public class MagnitudeDropoffModel
 		}
 	}
 	
-
 	public void WriteToFile()
 	{
 		// TODO: export the model as a JSON or some other appropriate file type
