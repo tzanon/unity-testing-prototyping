@@ -4,7 +4,6 @@ using System.Collections;
 using System.Collections.Generic;
 using NUnit.Framework;
 using UnityEngine;
-using UnityEngine.TestTools;
 
 namespace Tests
 {
@@ -79,10 +78,10 @@ namespace Tests
 			Assert.IsTrue(listWithInterPoints.Contains(point));
 		}
 
-		[Test]
+		//[Test]
 		public void MPL_OrderTest()
 		{
-
+			
 		}
 
 		[Test]

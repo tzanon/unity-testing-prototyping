@@ -12,7 +12,7 @@ namespace CustomPhysics
 	{
 		private float _time;
 		private float _strength;
-
+		
 		public float Time
 		{
 			get { return _time; }
@@ -29,13 +29,13 @@ namespace CustomPhysics
 				}
 			}
 		}
-
+		
 		public float Strength
 		{
 			get { return _strength; }
 			set { _strength = value; }
 		}
-
+		
 		public ModelPoint(float t, float s)
 		{
 			if (t < 0.0f)
@@ -625,7 +625,7 @@ namespace CustomPhysics
 
 		public bool Contains(ModelPoint mp)
 		{
-			return mp.Time >= min && mp.Time < max;
+			return Contains(mp.Time);
 		}
 	}
 
@@ -634,7 +634,52 @@ namespace CustomPhysics
 	/// </summary>
 	public struct MagnitudeDropoffModel
 	{
-
+		private Dictionary<ModelTimeDomain, ModelLine> _lines;
+		private readonly ModelPoint[] _points;
+		
+		/// <summary>
+		/// Based on given points, construct dictionary relating lines to their domains
+		/// </summary>
+		public MagnitudeDropoffModel(ModelPointList pointList)
+		{
+			_points = pointList.ToArray();
+			_lines = new Dictionary<ModelTimeDomain, ModelLine>();
+			
+			// calculate model's lines and their corresponding time domains
+			for (int i = 0; i < _points.Length - 1; i++)
+			{
+				ModelPoint p1 = _points[i];
+				ModelPoint p2 = _points[i+1];
+				
+				ModelLine line = new ModelLine(p1, p2);
+				ModelTimeDomain domain = new ModelTimeDomain(p1.Time, p2.Time);
+				_lines.Add(domain, line);
+			}
+		}
+		
+		/// <summary>
+		/// gets the magnitude of the force
+		/// </summary>
+		public float GetMagnitudeAtTime(float time)
+		{
+			foreach (ModelTimeDomain domain in _lines.Keys)
+			{
+				if (domain.Contains(time))
+				{
+					ModelLine line = _lines[domain];
+					return line.GetLinePoint(time);
+				}
+			}
+			
+			Debug.LogError("Given time does not exist in any domain");
+			return 0.0f;
+		}
+		
+		public void WriteToFile()
+		{
+			// TODO: export the model as a JSON or some other appropriate file type
+		}
+		
 	}
 
 }
