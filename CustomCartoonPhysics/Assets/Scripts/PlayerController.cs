@@ -18,12 +18,12 @@ public class PlayerController : MonoBehaviour
 	private void FixedUpdate()
 	{
 		Vector2 direction = CalculateMovementDirection();
-		rb.velocity = direction.normalized * speed;
+		rb.velocity = direction * speed;
 
-        
+		/*
 		if (direction != Vector2.zero)
-			tf.Translate(direction.normalized * speed * Time.deltaTime);
-		/**/
+			tf.Translate(direction * speed * Time.deltaTime);
+		*/
 	}
 
 	private Vector2 CalculateMovementDirection()
@@ -47,8 +47,7 @@ public class PlayerController : MonoBehaviour
 			direction.x += 1;
 		}
 
-		return direction;
+		return direction.normalized;
 	}
-
 
 }

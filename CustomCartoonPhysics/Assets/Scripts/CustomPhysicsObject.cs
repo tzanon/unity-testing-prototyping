@@ -1,55 +1,104 @@
 ﻿using CustomPhysics;
-
 using UnityEngine;
 using System.Collections.Generic;
 
 [RequireComponent(typeof(Rigidbody2D), typeof(Collider2D))]
 public class CustomPhysicsObject : MonoBehaviour
 {
+	protected class ForceRunner
+	{
+		public float currentTime = 0.0f;
+
+		private CustomForce _force;
+		private readonly float _expiryTime;
+
+		public bool Finished
+		{
+			get
+			{
+				return (currentTime >= _expiryTime);
+			}
+		}
+
+		public ForceRunner(CustomForce f)
+		{
+			_force = f;
+			_expiryTime = _force.Lifetime;
+		}
+
+		public ForceRunner(MagnitudeDropoffModel model, Vector2 dir) : this(new CustomForce(model, dir)) {}
+
+		public Vector2 GetCurrentForce()
+		{
+			if (Finished)
+			{
+				return Vector2.zero;
+			}
+
+			Vector2 currentForce = _force.ForceAtTime(currentTime);
+			return currentForce;
+		}
+
+		public override string ToString()
+		{
+			return _force.ToString();
+		}
+	}
+
+	public bool debugMode = false;
+
+	//public float CP_mass = 1.0f;
+
 	protected Rigidbody2D rb;
+	private readonly HashSet<ForceRunner> _forceRunners = new HashSet<ForceRunner>();
 
-	private List<CustomForce> currentForces = new List<CustomForce>();
-	HashSet<CustomForce> forces = new HashSet<CustomForce>();
-
-	struct Mod
+	protected virtual void Start()
 	{
-		Dictionary<ModelTimeDomain, ModelLine> mls;
+		rb = GetComponent<Rigidbody2D>();
 	}
 
-	// Start is called before the first frame update
-	private void Start()
+	protected virtual void FixedUpdate()
 	{
+		Vector2 customForceMovement = CalculateCustomForceMovement();
+
+		rb.velocity = customForceMovement;
 	}
 
-	// apply all current active forces
-	private void FixedUpdate()
+	public void AddCustomForce(CustomForce force)
 	{
-		
+		ForceRunner runner = new ForceRunner(force);
+		_forceRunners.Add(runner);
+
+		if (debugMode)
+		{
+			Debug.Log("Added custom force " + force.ToString());
+		}
 	}
 
-	
-	// Applies the effects of all current forces
-	private void ApplyForces()
+	// Applies the effects of all current forces for the current frame
+	private Vector2 CalculateCustomForceMovement()
 	{
-		
-	}
+		Vector2 customForceMovement = Vector2.zero;
 
-	// activates the timer
-	private void ActivateCustomForce(CustomForce force)
-	{
-		
-	}
+		// apply each force
+		foreach (ForceRunner runner in _forceRunners)
+		{
+			Vector2 rawForce = runner.GetCurrentForce();
+			Vector2 massScaledForce = rawForce / rb.mass; // maybe use a separate custom "mass" or multiplier?
 
-	private bool RemoveCustomForce(CustomForce force)
-	{
-		// TODO: 
-		return true;
-	}
+			customForceMovement += massScaledForce;
+			runner.currentTime += Time.deltaTime;
 
-	public void AddCustomForce()
-	{
-		
-	}
+			if (debugMode && runner.Finished)
+			{
+				Debug.Log("Force now finished: " + runner.ToString());
+			}
+		}
 
+		// remove the expired forces
+		_forceRunners.RemoveWhere(runner => runner.Finished);
+
+		return customForceMovement;
+	}
 
 }

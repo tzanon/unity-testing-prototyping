@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using UnityEngine;
+using System.IO;
 
 namespace CustomPhysics
 {
@@ -76,13 +77,16 @@ namespace CustomPhysics
 
 		public static bool operator ==(ModelPoint a, ModelPoint b)
 		{
+			if (a == null && b == null)
+				return true;
 			if (a == null || b == null)
 				return false;
-
 			return (a._time == b._time && a._strength == b._strength);
 		}
 		public static bool operator !=(ModelPoint a, ModelPoint b)
 		{
+			if (a == null && b == null)
+				return true;
 			if (a == null || b == null)
 				return false;
 			return (a._time != b._time || a._strength != b._strength);
@@ -301,21 +305,24 @@ namespace CustomPhysics
 		/// <summary>
 		/// Change time of end node
 		/// </summary>
-		public void SetEndValue(float lifetime)
+		public bool SetEndValue(float lifetime)
 		{
 			ModelPointNode secondLastNode = _end.previous;
 
 			if (lifetime <= secondLastNode.Value.Time)
 			{
 				Debug.LogError("Cannot set a lifetime shorter than the previous point's timestamp");
-				return;
+				return false;
 			}
 
-			ModelPointNode newEnd = new ModelPointNode(lifetime, 0.0f);
-
-			newEnd.previous = secondLastNode;
+			ModelPointNode newEnd = new ModelPointNode(lifetime, 0.0f)
+			{
+				previous = secondLastNode
+			};
 			secondLastNode.next = newEnd;
 			_end = newEnd;
+
+			return true;
 		}
 
 		/// <summary>
@@ -327,14 +334,14 @@ namespace CustomPhysics
 			// check that point is within the model's bounds
 			if (!PointInBounds(point))
 			{
-				Debug.Log("Point " + point.ToString() + " is not in bounds");
+				Debug.LogWarning("Point " + point.ToString() + " is not in bounds");
 				return false;
 			}
 
 			// don't add if point already in the list
 			if (Contains(point))
 			{
-				Debug.Log("List already contains point " + point.ToString());
+				Debug.LogWarning("List already contains point " + point.ToString());
 				return false;
 			}
 
@@ -374,14 +381,14 @@ namespace CustomPhysics
 			// can't remove an out of bounds point
 			if (!PointInBounds(point))
 			{
-				Debug.Log("Point " + point.ToString() + " is not in bounds");
+				Debug.LogWarning("Point " + point.ToString() + " is not in bounds");
 				return false;
 			}
 
 			// can't remove the start or end points
 			if (point == _start.Value || point == _end.Value)
 			{
-				Debug.Log("Cannot remove the start or end point");
+				Debug.LogWarning("Cannot remove the start or end point");
 				return false;
 			}
 
@@ -408,16 +415,7 @@ namespace CustomPhysics
 		}
 
 		/// <summary>
-		/// Replaces a point with a different one
-		/// </summary>
-		public bool Replace(ModelPoint oldPoint, ModelPoint newPoint)
-		{
-
-			return true;
-		}
-
-		/// <summary>
-		/// Returns the list's modelpoints in an array
+		/// Returns the list's modelpoints as an array
 		/// </summary>
 		public ModelPoint[] ToArray()
 		{
@@ -537,8 +535,8 @@ namespace CustomPhysics
 				return false;
 			}
 
-			_slope = (p2.Strength - p1.Strength) / (p2.Time - p1.Time);
-			_yIntercept = p2.Strength - _slope * p2.Time;
+			_slope = (float)Math.Round((p2.Strength - p1.Strength) / (p2.Time - p1.Time), 2);
+			_yIntercept = (float)Math.Round(p2.Strength - _slope * p2.Time, 2);
 			return true;
 		}
 		
@@ -552,7 +550,7 @@ namespace CustomPhysics
 		/// </summary>
 		public override string ToString()
 		{
-			string lineStr = "Model line S(t) = " + _slope + "t " + _yIntercept;
+			string lineStr = "S(t) = " + _slope + "t + " + _yIntercept;
 			return lineStr;
 		}
 	}
@@ -627,6 +625,12 @@ namespace CustomPhysics
 		{
 			return Contains(mp.Time);
 		}
+
+		public override string ToString()
+		{
+			string domainStr = "[" + min + ", " + max +")";
+			return domainStr;
+		}
 	}
 
 	/// <summary>
@@ -634,9 +638,17 @@ namespace CustomPhysics
 	/// </summary>
 	public struct MagnitudeDropoffModel
 	{
-		private Dictionary<ModelTimeDomain, ModelLine> _lines;
+		private readonly Dictionary<ModelTimeDomain, ModelLine> _lines;
 		private readonly ModelPoint[] _points;
 		
+		public float Lifetime
+		{
+			get
+			{
+				return _points[_points.Length - 1].Time;
+			}
+		}
+
 		/// <summary>
 		/// Based on given points, construct dictionary relating lines to their domains
 		/// </summary>
@@ -656,12 +668,17 @@ namespace CustomPhysics
 				_lines.Add(domain, line);
 			}
 		}
-		
+
 		/// <summary>
 		/// gets the magnitude of the force
 		/// </summary>
 		public float GetMagnitudeAtTime(float time)
 		{
+			if (_lines == null)
+			{
+				throw new Exception("Model's Domain -> Line dictionary not initialized");
+			}
+
 			foreach (ModelTimeDomain domain in _lines.Keys)
 			{
 				if (domain.Contains(time))
@@ -671,7 +688,7 @@ namespace CustomPhysics
 				}
 			}
 			
-			Debug.LogError("Given time does not exist in any domain");
+			// not in domain
 			return 0.0f;
 		}
 		
@@ -679,7 +696,24 @@ namespace CustomPhysics
 		{
 			// TODO: export the model as a JSON or some other appropriate file type
 		}
-		
+
+		public override string ToString()
+		{
+			if (_lines == null || _lines.Count <= 0)
+			{
+				return "Dropoff Model: empty";
+			}
+
+			string modelStr = "Dropoff Model: ";
+
+			foreach (KeyValuePair<ModelTimeDomain, ModelLine> pair in _lines)
+			{
+				modelStr += pair.Key.ToString() + " -> " + pair.Value.ToString() + ", ";
+			}
+
+			return modelStr;
+		}
+
 	}
 
 }

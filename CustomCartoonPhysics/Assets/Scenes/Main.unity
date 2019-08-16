@@ -259,8 +259,8 @@ GameObject:
   m_Component:
   - component: {fileID: 1267933284}
   - component: {fileID: 1267933283}
-  - component: {fileID: 1267933287}
   - component: {fileID: 1267933285}
+  - component: {fileID: 1267933287}
   - component: {fileID: 1267933286}
   m_Layer: 0
   m_Name: BitCrusher
@@ -326,7 +326,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1267933282}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: -1.155, y: 0.569, z: -2.7441406}
+  m_LocalPosition: {x: -2.01, y: -0.64, z: -2.7441406}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children: []
   m_Father: {fileID: 0}
@@ -367,10 +367,10 @@ MonoBehaviour:
   m_GameObject: {fileID: 1267933282}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: a06c690923db4724f99c57865b0ba02c, type: 3}
+  m_Script: {fileID: 11500000, guid: e6e6cde8b4ec60a4a9cb48c9cd980df7, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  speed: 4
+  debugMode: 1
 --- !u!50 &1267933287
 Rigidbody2D:
   serializedVersion: 4
@@ -491,7 +491,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!114 &1692525115
 MonoBehaviour:
   m_ObjectHideFlags: 0

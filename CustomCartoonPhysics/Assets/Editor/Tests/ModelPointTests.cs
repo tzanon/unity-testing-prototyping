@@ -1,9 +1,6 @@
 ﻿using CustomPhysics;
-using System.Collections;
-using System.Collections.Generic;
 using NUnit.Framework;
 using UnityEngine;
-using UnityEngine.TestTools;
 
 namespace Tests
 {
@@ -20,17 +17,19 @@ namespace Tests
 		Vector2 vec2 = new Vector2(5.0f, 17.0f);
 		ModelPointComparer comparer = new ModelPointComparer();
 		ModelTimeDomain domain = new ModelTimeDomain(0.0f, 6.0f);
-		
+
+		#region Model point tests
+
 		[Test]
 		public void MPEqTest()
 		{
-			Assert.IsTrue(mp1 == mp2);
+			Assert.AreEqual(mp1, mp2);
 		}
 
 		[Test]
 		public void MPNotEqTest()
 		{
-			Assert.IsTrue(mp1 != mp3);
+			Assert.AreNotEqual(mp1, mp3);
 		}
 
 		[Test]
@@ -73,6 +72,10 @@ namespace Tests
 			Assert.Zero(cmpRes);
 		}
 
+		#endregion
+
+		#region Domain tests
+
 		[Test]
 		public void DomainContainsMinTest()
 		{
@@ -100,5 +103,60 @@ namespace Tests
 			bool domainContains = domain.Contains(mp6);
 			Assert.IsFalse(domainContains);
 		}
+
+		#endregion
+
+		#region Line tests
+
+		private static readonly ModelPoint p1 = new ModelPoint(0.0f, 6.0f);
+		private static readonly ModelPoint p2 = new ModelPoint(3.0f, 0.0f);
+		private static readonly ModelPoint p3 = new ModelPoint(0.0f, 9.0f);
+		private static readonly ModelPoint p4 = new ModelPoint(4.0f, 0.0f);
+		private static readonly ModelPoint p5 = new ModelPoint(2.0f, 9.0f);
+		private static readonly ModelPoint p6 = new ModelPoint(7.0f, 5.0f);
+
+		private readonly ModelLine line1 = new ModelLine(p1, p2);
+		private readonly ModelLine line2 = new ModelLine(p3, p4);
+		private readonly ModelLine line3 = new ModelLine(p5, p6);
+
+		[Test]
+		public void LineSlopeTest1()
+		{
+			Assert.AreEqual(line1.Slope, -2.0f);
+		}
+
+		[Test]
+		public void LineYIntTest1()
+		{
+			Assert.AreEqual(line1.YIntercept, 6.0f);
+		}
+
+		[Test]
+		public void LineSlopeTest2()
+		{
+			Assert.AreEqual(line2.Slope, -2.25f);
+		}
+		
+		[Test]
+		public void LineYIntTest2()
+		{
+			//Assert.IsTrue(line2.YIntercept == 9.0f);
+			Assert.AreEqual(line2.YIntercept, 9.0f);
+		}
+
+		[Test]
+		public void LineSlopeTest3()
+		{
+			Assert.AreEqual(line3.Slope, -0.8f);
+		}
+
+		[Test]
+		public void LineYIntTest3()
+		{
+			Assert.AreEqual(line3.YIntercept, 10.6f);
+		}
+
+		#endregion
+
 	}
 }
