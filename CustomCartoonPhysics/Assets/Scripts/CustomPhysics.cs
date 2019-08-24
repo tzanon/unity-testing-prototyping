@@ -91,31 +91,43 @@ namespace CustomPhysics
 				return false;
 			return (a._time != b._time || a._strength != b._strength);
 		}
+		public static ModelPoint operator *(float a, ModelPoint mp)
+		{
+			return new ModelPoint(mp.Time, a * mp.Strength);
+		}
+		public static ModelPoint operator *(ModelPoint mp, float a)
+		{
+			return a * mp;
+		}
+		public static ModelPoint MultiplyTimeStrength(float timeFactor, float strengthFactor, ModelPoint mp)
+		{
+			return new ModelPoint(timeFactor * mp.Time, strengthFactor * mp.Strength);
+		}
 
 		// compare with Vector2s as well
 		public static bool operator ==(ModelPoint mp, Vector2 v2)
 		{
+			if (mp == null && v2 == null)
+				return true;
 			if (mp == null || v2 == null)
 				return false;
 			return (mp._time == v2.x && mp._strength == v2.y);
 		}
 		public static bool operator !=(ModelPoint mp, Vector2 v2)
 		{
-			if (mp == null || v2 == null)
+			if (mp == null && v2 == null)
 				return false;
+			if (mp == null || v2 == null)
+				return true;
 			return (mp._time != v2.x || mp._strength != v2.y);
 		}
 		public static bool operator ==(Vector2 v2, ModelPoint mp)
 		{
-			if (mp == null || v2 == null)
-				return false;
-			return (mp._time == v2.x && mp._strength == v2.y);
+			return mp == v2;
 		}
 		public static bool operator !=(Vector2 v2, ModelPoint mp)
 		{
-			if (mp == null || v2 == null)
-				return false;
-			return (mp._time != v2.x || mp._strength != v2.y);
+			return mp != v2;
 		}
 
 		public override bool Equals(object obj)
@@ -264,15 +276,24 @@ namespace CustomPhysics
 		public ModelPoint End
 		{
 			get { return _end.Value; }
-		}	 
+		}
 
-		/// <summary>
-		/// Constructor that makes the start and end points based on the given initial magnitude and lifetime
-		/// </summary>
-		public ModelPointList(float initialStrength, float lifetime, ModelPoint[] initIntermediatePoints = null)
+		public ModelPointList(ModelPoint initStrengthPoint, ModelPoint lifetimePoint, ModelPoint[] initIntermediatePoints = null)
 		{
-			_start = new ModelPointNode(0.0f, initialStrength);
-			_end = new ModelPointNode(lifetime, 0.0f);
+			if (initStrengthPoint.Time != 0.0f)
+			{
+				Debug.LogError("Initial strength point must have a time value of zero!");
+				initStrengthPoint.Time = 0.0f;
+			}
+
+			if (lifetimePoint.Strength != 0.0f)
+			{
+				Debug.LogError("Lifetime point must have a strength value of zero!");
+				lifetimePoint.Strength = 0.0f;
+			}
+
+			_start = new ModelPointNode(initStrengthPoint);
+			_end = new ModelPointNode(lifetimePoint);
 			_comparer = new ModelPointComparer();
 
 			_start.next = _end;
@@ -285,8 +306,18 @@ namespace CustomPhysics
 					this.Add(mp);
 				}
 			}
-
 		}
+
+		/// <summary>
+		/// Constructor that makes the start and end points based on the given initial magnitude and lifetime
+		/// </summary>
+		public ModelPointList(float initialStrength, float lifetime, ModelPoint[] initIntermediatePoints = null)
+			: this(new ModelPoint(0.0f, initialStrength), new ModelPoint(lifetime, 0.0f), initIntermediatePoints) {}
+
+		/// <summary>
+		/// Constructor that makes a list with initial magnitude 1.0
+		/// </summary>
+		public ModelPointList(float lifetime, ModelPoint[] initIntermediatePoints = null) : this(1.0f, lifetime, initIntermediatePoints) {}
 
 		/// <summary>
 		/// Change magnitude of start node
@@ -640,7 +671,15 @@ namespace CustomPhysics
 	{
 		private readonly Dictionary<ModelTimeDomain, ModelLine> _lines;
 		private readonly ModelPoint[] _points;
-		
+
+		public float InitialStrength
+		{
+			get
+			{
+				return _points[0].Strength;
+			}
+		}
+
 		public float Lifetime
 		{
 			get
@@ -649,11 +688,21 @@ namespace CustomPhysics
 			}
 		}
 
+		public ModelPoint[] Points
+		{
+			get
+			{
+				return _points;
+			}
+		}
+
 		/// <summary>
 		/// Based on given points, construct dictionary relating lines to their domains
 		/// </summary>
 		public MagnitudeDropoffModel(ModelPointList pointList)
 		{
+			//_modelPoints = pointList;
+
 			_points = pointList.ToArray();
 			_lines = new Dictionary<ModelTimeDomain, ModelLine>();
 			
@@ -667,6 +716,22 @@ namespace CustomPhysics
 				ModelTimeDomain domain = new ModelTimeDomain(p1.Time, p2.Time);
 				_lines.Add(domain, line);
 			}
+		}
+
+		/// <summary>
+		/// Multiply the model's strength dropoff by the given factor
+		/// </summary>
+		public static MagnitudeDropoffModel operator *(float factor, MagnitudeDropoffModel model)
+		{
+			ModelPointList multipliedList = new ModelPointList(factor * model.InitialStrength, model.Lifetime);
+
+			for (int i = 1; i < model.Points.Length - 1; i++)
+			{
+				multipliedList.Add(factor * model.Points[i]);
+			}
+
+			MagnitudeDropoffModel multipliedModel = new MagnitudeDropoffModel(multipliedList);
+			return multipliedModel;
 		}
 
 		/// <summary>
