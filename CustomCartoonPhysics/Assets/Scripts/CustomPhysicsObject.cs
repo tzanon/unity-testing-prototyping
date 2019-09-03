@@ -3,7 +3,7 @@ using UnityEngine;
 using System.Collections.Generic;
 
 [RequireComponent(typeof(Rigidbody2D), typeof(Collider2D))]
-public class CustomPhysicsObject : MonoBehaviour
+public abstract class CustomPhysicsObject : MonoBehaviour
 {
 	protected class ForceRunner
 	{
@@ -49,20 +49,46 @@ public class CustomPhysicsObject : MonoBehaviour
 
 	//public float CP_mass = 1.0f;
 
+	protected Vector2 totalMovement;
+
 	protected Rigidbody2D rb;
 	private readonly HashSet<ForceRunner> _forceRunners = new HashSet<ForceRunner>();
 
 	protected virtual void Start()
 	{
 		rb = GetComponent<Rigidbody2D>();
+		totalMovement = Vector2.zero;
 	}
 
-	protected virtual void FixedUpdate()
+	// 
+	private void FixedUpdate()
 	{
-		Vector2 customForceMovement = CalculateCustomForceMovement();
+		totalMovement = Vector2.zero;
 
-		rb.velocity = customForceMovement;
+		if (_forceRunners.Count > 0)
+		{
+			Vector2 customForceMovement = CalculateCustomForceMovement();
+			totalMovement += customForceMovement * Time.fixedDeltaTime;
+		}
 	}
+
+	// 
+	private void Update()
+	{
+		HandleAdditionalMovement();
+
+		// final movement
+		//rb.velocity = totalMovement;
+		rb.MovePosition(rb.position + totalMovement);
+	}
+
+	// 
+	private void LateUpdate()
+	{
+		totalMovement = Vector2.zero;
+	}
+
+	protected abstract void HandleAdditionalMovement();
 
 	public void AddCustomForce(CustomForce force)
 	{
@@ -87,7 +113,9 @@ public class CustomPhysicsObject : MonoBehaviour
 			Vector2 massScaledForce = rawForce / rb.mass; // maybe use a separate custom "mass" or multiplier?
 
 			customForceMovement += massScaledForce;
-			runner.currentTime += Time.deltaTime;
+
+			// increase the force's elapsed time
+			runner.currentTime += Time.fixedDeltaTime;
 
 			if (debugMode && runner.Finished)
 			{

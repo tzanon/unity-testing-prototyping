@@ -99,7 +99,7 @@ namespace CustomPhysics
 		{
 			return a * mp;
 		}
-		public static ModelPoint MultiplyTimeStrength(float timeFactor, float strengthFactor, ModelPoint mp)
+		public static ModelPoint MultiplyByTimeAndStrength(float timeFactor, float strengthFactor, ModelPoint mp)
 		{
 			return new ModelPoint(timeFactor * mp.Time, strengthFactor * mp.Strength);
 		}
@@ -769,7 +769,7 @@ namespace CustomPhysics
 				return "Dropoff Model: empty";
 			}
 
-			string modelStr = "Dropoff Model: ";
+			string modelStr = "Dropoff Model has init strength=" + InitialStrength + ", lifetime=" + Lifetime + ", points: ";
 
 			foreach (KeyValuePair<ModelTimeDomain, ModelLine> pair in _lines)
 			{

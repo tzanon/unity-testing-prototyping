@@ -3,7 +3,9 @@ using UnityEngine;
 
 public class CPDummy : CustomPhysicsObject
 {
-	private MagnitudeDropoffModel _movementDropoffModel;
+	public float moveSpeed = 10.0f;
+
+	private MagnitudeDropoffModel _dashDropoffModel;
 
 	protected override void Start()
 	{
@@ -14,44 +16,76 @@ public class CPDummy : CustomPhysicsObject
 		ModelPoint mp1 = new ModelPoint(0.175f, 50.0f);
 		ModelPoint mp2 = new ModelPoint(0.47f, 10.0f);
 		ModelPointList pointList = new ModelPointList(200.0f, 0.7f, new ModelPoint[]{mp1, mp2});
-		_movementDropoffModel = new MagnitudeDropoffModel(pointList);
+		_dashDropoffModel = new MagnitudeDropoffModel(pointList);
 	}
 
-	protected override void FixedUpdate()
+	/// <summary>
+	/// Called from parent's Update()
+	/// Calculates player movement and adds any dash forces
+	/// </summary>
+	protected override void HandleAdditionalMovement()
 	{
-		Vector2 direction = CalculateMovementDirection();
+		Vector2 moveDirection = CalculateMovementDirection();
+		Vector2 dashDirection = CalculateDashDirection();
 
-		if (direction != Vector2.zero)
+		if (moveDirection != Vector2.zero)
 		{
-			CustomForce force = new CustomForce(_movementDropoffModel, direction);
-			this.AddCustomForce(force);
+			totalMovement += moveSpeed * moveDirection * Time.deltaTime;
 		}
 
-		base.FixedUpdate();
+		if (dashDirection != Vector2.zero)
+		{
+			CustomForce force = new CustomForce(_dashDropoffModel, dashDirection);
+			this.AddCustomForce(force);
+		}
+	}
+
+	private Vector2 CalculateDashDirection()
+	{
+		Vector2 direction = Vector2.zero;
+
+		if (Input.GetKeyDown(KeyCode.UpArrow))
+		{
+			direction.y += 1;
+		}
+		if (Input.GetKeyDown(KeyCode.DownArrow))
+		{
+			direction.y -= 1;
+		}
+		if (Input.GetKeyDown(KeyCode.LeftArrow))
+		{
+			direction.x -= 1;
+		}
+		if (Input.GetKeyDown(KeyCode.RightArrow))
+		{
+			direction.x += 1;
+		}
+
+		return direction.normalized;
 	}
 
 	private Vector2 CalculateMovementDirection()
 	{
 		Vector2 direction = Vector2.zero;
 
-		if (Input.GetKeyDown(KeyCode.W))
+		if (Input.GetKey(KeyCode.W))
 		{
 			direction.y += 1;
 		}
-		if (Input.GetKeyDown(KeyCode.S))
+		if (Input.GetKey(KeyCode.S))
 		{
 			direction.y -= 1;
 		}
-		if (Input.GetKeyDown(KeyCode.A))
+		if (Input.GetKey(KeyCode.A))
 		{
 			direction.x -= 1;
 		}
-		if (Input.GetKeyDown(KeyCode.D))
+		if (Input.GetKey(KeyCode.D))
 		{
 			direction.x += 1;
 		}
 
-		return direction;
+		return direction.normalized;
 	}
 
 }
