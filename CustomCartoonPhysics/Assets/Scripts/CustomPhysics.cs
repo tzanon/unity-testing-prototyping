@@ -502,15 +502,11 @@ namespace CustomPhysics
 		}
 
 		/// <summary>
-		/// Checks if the given point
+		/// Checks if the given point is within the list's start and end point's times
 		/// </summary>
 		public bool PointInBounds(ModelPoint point)
 		{
-			if (_comparer.Compare(_start.Value, point) < 0 &&
-				_comparer.Compare(_end.Value, point) > 0)
-				return true;
-			else
-				return false;
+			return (_comparer.Compare(_start.Value, point) < 0 && _comparer.Compare(_end.Value, point) > 0);
 		}
 
 		/// <summary>
@@ -721,13 +717,13 @@ namespace CustomPhysics
 		/// <summary>
 		/// Multiply the model's strength dropoff by the given factor
 		/// </summary>
-		public static MagnitudeDropoffModel operator *(float factor, MagnitudeDropoffModel model)
+		public static MagnitudeDropoffModel operator *(float strengthFactor, MagnitudeDropoffModel model)
 		{
-			ModelPointList multipliedList = new ModelPointList(factor * model.InitialStrength, model.Lifetime);
+			ModelPointList multipliedList = new ModelPointList(strengthFactor * model.InitialStrength, model.Lifetime);
 
 			for (int i = 1; i < model.Points.Length - 1; i++)
 			{
-				multipliedList.Add(factor * model.Points[i]);
+				multipliedList.Add(strengthFactor * model.Points[i]);
 			}
 
 			MagnitudeDropoffModel multipliedModel = new MagnitudeDropoffModel(multipliedList);
