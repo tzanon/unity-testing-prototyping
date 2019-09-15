@@ -10,10 +10,10 @@ namespace Tests
 		private const float lifetime = 5.0f;
 
 		private static readonly ModelPoint
-			// list points, in sorted order
+			// list points, in unsorted order
 			mp1 = new ModelPoint(1.0f, 8.0f),
-			mp3 = new ModelPoint(2.0f, 5.0f),
 			mp2 = new ModelPoint(3.5f, 1.5f),
+			mp3 = new ModelPoint(2.0f, 5.0f),
 
 			// these ones don't go in the list
 			mp4 = new ModelPoint(1.5f, 3.0f),
@@ -24,6 +24,8 @@ namespace Tests
 		private ModelPointList basicList = new ModelPointList(initStrength, lifetime);
 		private ModelPointList listWithInterPoints = new ModelPointList(initStrength, lifetime, initPoints);
 
+		private static readonly ModelPointComparer comparer = new ModelPointComparer();
+
 		[Test]
 		public void BasicMPL_InitStrengthTest()
 		{
@@ -31,7 +33,7 @@ namespace Tests
 			bool status = (startPoint == basicList[0]) && (startPoint == basicList.Start);
 			Assert.IsTrue(status);
 		}
-		
+
 		[Test]
 		public void BasicMPL_LifetimeTest()
 		{
@@ -127,10 +129,22 @@ namespace Tests
 			Assert.AreEqual(expectedArray, actualArray);
 		}
 
-		//[Test]
+		[Test]
 		public void MPL_OrderTest()
 		{
-			
+			bool isOrdered = true;
+			ModelPoint[] mpArray = listWithInterPoints.ToArray();
+
+			for (int i = 1; i < mpArray.Length; i++)
+			{
+				if (comparer.Compare(mpArray[i], mpArray[i-1]) < 0)
+				{
+					isOrdered = false;
+					break;
+				}
+			}
+
+			Assert.IsTrue(isOrdered);
 		}
 
 		public bool AddToList(ModelPoint point)
@@ -166,8 +180,18 @@ namespace Tests
 		[Test]
 		public void MPL_RemovePointTest()
 		{
-			ModelPointList pointList = new ModelPointList(initStrength, lifetime);
+			ModelPointList pointList = new ModelPointList(initStrength, lifetime, initPoints);
+			bool status = pointList.Remove(mp1);
 
+			Assert.IsTrue(status, "Failed to remove element");
+			Assert.AreEqual(mp3, pointList[1], string.Format("List's 2nd element should be {0}, was {1}", mp3, pointList[1]));
+		}
+
+		[Test]
+		public void MPL_RemoveNonexistantPointTest()
+		{
+			bool status = listWithInterPoints.Remove(mp4);
+			Assert.IsFalse(status);
 		}
 
 	}

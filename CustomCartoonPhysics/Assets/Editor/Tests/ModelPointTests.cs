@@ -15,8 +15,8 @@ namespace Tests
 		
 		Vector2 vec1 = new Vector2(0.0f, 10.0f);
 		Vector2 vec2 = new Vector2(5.0f, 17.0f);
-		ModelPointComparer comparer = new ModelPointComparer();
-		ModelTimeDomain domain = new ModelTimeDomain(0.0f, 6.0f);
+		readonly ModelPointComparer comparer = new ModelPointComparer();
+		readonly ModelTimeDomain domain = new ModelTimeDomain(0.0f, 6.0f);
 
 		#region Model point tests
 

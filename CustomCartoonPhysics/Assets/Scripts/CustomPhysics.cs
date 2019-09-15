@@ -162,9 +162,10 @@ namespace CustomPhysics
 	{
 		/// <summary>
 		/// Compare model points according to their time value.
-		/// return 1 if a > b,
-		/// -1 if a < b,
-		/// return 0 if a == b
+		/// return:
+		///		if a > b, 1
+		///		if a < b, -1
+		///		if a == b, 0
 		/// </summary>
 		public override int Compare(ModelPoint a, ModelPoint b)
 		{
